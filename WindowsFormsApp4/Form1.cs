@@ -59,6 +59,8 @@ namespace TerminalApp
                 nCountRx = nCountTx = 0;
                 toolStripTx.Text = "Tx: 0";
                 toolStripRx.Text = "Rx: 0";
+                txtLength.Text = "0";
+                txtTimeSample.Text = "0";
             };
             btnReScan.Click += (o, e) =>
             {
@@ -224,7 +226,7 @@ namespace TerminalApp
         #endregion
 
         #region Task async await
-        private async Task TaskTxRequest()    //có thể bỏ: async vì chạy Task.Run(). Tuy nhiên phải thêm vài mới cancel được Task()
+        private async Task TaskTxRequest()    //có thể bỏ: async vì chạy Task.Run(). Tuy nhiên phải thêm vào mới cancel được Task()
         {
             //Bên dưới có While(1) nên chỉ cần khai báo Local là được.
             int nCountTimerTx1 = 0, nCountTimerTx2 = 0, nCountTimerTx3 = 0, nCountTimerTx4 = 0, nCountTimerTx5 = 0;
