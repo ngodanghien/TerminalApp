@@ -157,6 +157,11 @@ namespace TerminalApp
             //throw new NotImplementedException();
             if (btnConnect.Text == "Connect")
             {
+                if (cbCOM.Text == "")
+                {
+                    MessageBox.Show("Chưa chọn cổng COM", "Cảnh báo!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
                 if (!serialPort1.IsOpen)
                 {
                     //Add thông tin COMPort và Baudrate trước khi connect
