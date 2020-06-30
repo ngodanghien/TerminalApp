@@ -72,11 +72,15 @@ namespace TerminalApp
         private void Form1_Load(object sender, EventArgs e)
         {
             //0. Lấy toàn bộ cổng COM hiện có trên PC
-            string[] ports = SerialPort.GetPortNames();
-            cbCOM.Items.Clear();
-            cbCOM.Items.AddRange(ports);
+            try
+            {
+                string[] ports = SerialPort.GetPortNames();
+                cbCOM.Items.Clear();
+                cbCOM.Items.AddRange(ports);
+                cbCOM.SelectedIndex = 0;
+            }
+            catch { }
             //1. Chọn cái đầu tiên load lên đầu
-            cbCOM.SelectedIndex = 0;
             cbBaud.SelectedIndex = 4;        //115200
             cbDataBit.SelectedIndex = 0;    //8bit
             cbStopBit.SelectedIndex = 0;    //One
