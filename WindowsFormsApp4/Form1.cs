@@ -100,14 +100,14 @@ namespace TerminalApp
 
         #region SerialPort Connect | Disconnect | Receive
         Stopwatch timer = new Stopwatch();
-
+        
         private void SerialPort1_DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
             //throw new NotImplementedException();
             byte[] bufferReceiver = new byte[serialPort1.BytesToRead];
             serialPort1.Read(bufferReceiver, 0, serialPort1.BytesToRead);
 
-            timer.Stop(); // Stopwatch
+            timer.Stop(); // Stopwatch ---> for debug
             nCountRx++;
             string strTemp = null;
 
@@ -139,16 +139,21 @@ namespace TerminalApp
             {
                 txtReceive.AppendText(strTemp);// dataSerial);
             });
-
             //Update Count Rx
             Invoke((MethodInvoker)delegate
             {
                 toolStripRx.Text = "Rx: " + nCountRx.ToString();
+            });
+            Invoke((MethodInvoker)delegate
+            {
                 txtLength.Text = bufferReceiver.Length.ToString();
+            });
+            Invoke((MethodInvoker)delegate
+            {  
                 txtTimeSample.Text = timer.Elapsed.TotalMilliseconds.ToString("#,##0.0");
             });
-            //          
-            Debug.WriteLine("Time Taken: " + timer.Elapsed.TotalMilliseconds.ToString("#,##0.00 'milliseconds'"));
+            //   ---> for debug       
+            //Debug.WriteLine("Time Taken: " + timer.Elapsed.TotalMilliseconds.ToString("#,##0.00 'milliseconds'"));
             timer.Restart();
             //
         }
@@ -208,7 +213,7 @@ namespace TerminalApp
                     isConnect = true;
                     btnConnect.Text = "Disconnect";
                     btnReScan.Enabled = false;
-                    groupSend.Enabled = true;
+                    //groupSend.Enabled = true;
                     //2. Run Task bình thường
                     //Task.Run(TaskTxRequest);
                     Task.Factory.StartNew(TaskTxRequest);
@@ -227,7 +232,7 @@ namespace TerminalApp
                     isConnect = false;
                     btnConnect.Text = "Connect";
                     btnReScan.Enabled = true;
-                    groupSend.Enabled = false;
+                    //groupSend.Enabled = false;
                     //4. Cancel Task();
                     cancelTask.Cancel();
                 }
@@ -368,6 +373,7 @@ namespace TerminalApp
 
         private void SendDataBuffer(string stringData, CheckBox chbHexa, CheckBox chbCR, CheckBox chbLF, ComboBox cbCRC) 
         {
+            byte[] dataSend = null;
             //2. Gửi dữ liệu đi (kiểu ASCII hoặc Hexa)
             if (chbHexa.Checked)
             {
@@ -385,7 +391,8 @@ namespace TerminalApp
                     return;
                 }
                 //OK bắt đầu truyền.
-                byte[] dataSend = ToByteArray(strData);
+                //byte[] dataSend = ToByteArray(strData);
+                dataSend = ToByteArray(strData);
 
                 byte[] subData = SendSubDataAfterString(dataSend, chbCR, chbLF, cbCRC);
 
@@ -395,11 +402,15 @@ namespace TerminalApp
                     Array.Resize(ref dataSend, dataSend.Length + subData.Length);
                     for (int i = 0; i < subData.Length; i++) dataSend[dataSend.Length - newLength--] = subData[i];  //[PASSED]
                 }
-                serialPort1.Write(dataSend, 0, dataSend.Length);
+                if (radioHEX.Checked)
+                {
+                    
+                }               
             }
             else // Truyền bình thường, ko có Hexa
             {
-                byte[] dataSend = Encoding.ASCII.GetBytes(stringData);
+                //byte[] dataSend = Encoding.ASCII.GetBytes(stringData);
+                dataSend = Encoding.ASCII.GetBytes(stringData);
                 byte[] subData = SendSubDataAfterString(dataSend, chbCR, chbLF, cbCRC);
 
                 int newLength = subData.Length;
@@ -408,13 +419,26 @@ namespace TerminalApp
                     Array.Resize(ref dataSend, dataSend.Length + subData.Length);
                     for (int i = 0; i < subData.Length; i++) dataSend[dataSend.Length - newLength--] = subData[i];  //[PASSED]
                 }
-                serialPort1.Write(dataSend, 0, dataSend.Length);
-            }
-            //3. Update Tx toolStatus
-            nCountTx++;
+            }           
+            //view ko cần connect (Hexa)
             Invoke((MethodInvoker)delegate {
-                toolStripTx.Text = "Tx: " + nCountTx.ToString();
-            });          
+                string strTemp = "";
+                for (int i = 0; i < dataSend.Length; i++)
+                {
+                    string tmp = dataSend[i].ToString("X2") + " ";
+                    strTemp += tmp;
+                }
+                txtSendView.Text = strTemp;//
+            });
+            //3. Update Tx toolStatus
+            if (isConnect)
+            {
+                serialPort1.Write(dataSend, 0, dataSend.Length);
+                nCountTx++;
+                Invoke((MethodInvoker)delegate {
+                    toolStripTx.Text = "Tx: " + nCountTx.ToString();
+                });
+            }
         }
         byte [] SendSubDataAfterString(byte[] dataSend, CheckBox chbCR, CheckBox chbLF, ComboBox cbCRC)
         {
