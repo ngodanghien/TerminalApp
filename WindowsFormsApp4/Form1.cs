@@ -99,15 +99,19 @@ namespace TerminalApp
         #endregion
 
         #region SerialPort Connect | Disconnect | Receive
-        Stopwatch timer = new Stopwatch();
-        
+        Stopwatch timer = new Stopwatch();    //stopwatch chính xác hơn.
+        private int tickCount = 0;
         private void SerialPort1_DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
-            //throw new NotImplementedException();
             byte[] bufferReceiver = new byte[serialPort1.BytesToRead];
             serialPort1.Read(bufferReceiver, 0, serialPort1.BytesToRead);
 
             timer.Stop(); // Stopwatch ---> for debug
+            double time = timer.Elapsed.TotalMilliseconds;
+            timer.Restart();
+            //double time = (Environment.TickCount - tickCount); //ms
+            //tickCount = Environment.TickCount;
+
             nCountRx++;
             string strTemp = null;
 
@@ -149,13 +153,12 @@ namespace TerminalApp
                 txtLength.Text = bufferReceiver.Length.ToString();
             });
             Invoke((MethodInvoker)delegate
-            {  
-                txtTimeSample.Text = timer.Elapsed.TotalMilliseconds.ToString("#,##0.0");
+            {
+                //txtTimeSample.Text = timer.Elapsed.TotalMilliseconds.ToString("#,##0.0");
+                txtTimeSample.Text = time.ToString("#,##0.0");
             });
             //   ---> for debug       
             //Debug.WriteLine("Time Taken: " + timer.Elapsed.TotalMilliseconds.ToString("#,##0.00 'milliseconds'"));
-            timer.Restart();
-            //
         }
         private void BtConnect_Click(object sender, EventArgs e)
         {
@@ -216,6 +219,8 @@ namespace TerminalApp
                     //groupSend.Enabled = true;
                     //2. Run Task bình thường
                     //Task.Run(TaskTxRequest);
+                    //1 trong các T được ticked thì cho phép chạy.
+                    //if (chbTf1.Checked || chbTf2.Checked || chbTf3.Checked || chbTf4.Checked)
                     Task.Factory.StartNew(TaskTxRequest);
                 }
             }
@@ -250,18 +255,25 @@ namespace TerminalApp
             cancelTask = new CancellationTokenSource();     //1. Cần phải khởi tạo lại cả 2 (sau khi dừng)
             CancellationToken token = cancelTask.Token;     //2.
 
-            //var sw = new Stopwatch();
-            //sw.Start();
+            var sw = new Stopwatch();
+            sw.Start();
 
             while (true)
             {
+                //sw.Restart();
+                Thread.Sleep(10);               
+                //Console.WriteLine("async: Running for {0} seconds", sw.Elapsed.TotalMilliseconds);
+                //sw = new Stopwatch();
+                //sw.Restart();
+                //sw.Start();
+
                 //Note: Thread.Sleep(): Vẫn có thể delay chính xác 1ms
                 //Tuy nhiên, code phía sau ko đảm bảo, nên để tối thiểu là 10ms
                 //Đồng nghĩa với việc: Thời gian truyền xuống PC tối thiếu là 10ms
                 //Đã [TESTED]. Thời gian truyền chính xác với thời gian đặt. Min = 10ms
 
                 //await Task.Delay(1); //[TESED] - Delay ko chính xác
-                Thread.Sleep(10);      //[TESTED] - Delay chính xác
+                //Thread.Sleep(10);      //[TESTED] - Delay chính xác
                 //check to see if operation is cancelled and throw exception if it is
                 token.ThrowIfCancellationRequested();   //3.cho phép có thể Cancel Task()
                                                         //Lệnh: Cancel bên ngoài: cts.Cancel();
@@ -330,6 +342,7 @@ namespace TerminalApp
                     }
                 }
                 //
+                //Console.WriteLine("async: Running for {0} miliseconds", sw.Elapsed.TotalMilliseconds);
             }
         }
         #endregion
